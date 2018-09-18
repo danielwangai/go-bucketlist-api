@@ -49,3 +49,12 @@ func FetchBucketlists(db *gorm.DB) (*[]Bucketlist, error) {
 	}
 	return nil, errors.New("You have no bucketlists.")
 }
+
+func FetchOneBucketlist(id string, db *gorm.DB) (*Bucketlist, error) {
+	var bucketlist Bucketlist
+	db.First(&bucketlist, id)
+	if bucketlist.ID == id {
+		return &bucketlist, nil
+	}
+	return nil, errors.New("Bucketlist matching given id not found.")
+}

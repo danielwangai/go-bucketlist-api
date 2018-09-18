@@ -52,9 +52,22 @@ func FetchBucketlists(db *gorm.DB) (*[]Bucketlist, error) {
 
 func FetchOneBucketlist(id string, db *gorm.DB) (*Bucketlist, error) {
 	var bucketlist Bucketlist
-	db.First(&bucketlist, id)
+	db.Where("id = ?", id).First(&bucketlist)
 	if bucketlist.ID == id {
 		return &bucketlist, nil
 	}
 	return nil, errors.New("Bucketlist matching given id not found.")
+}
+
+func UpdateBucketlist(id, name, description string, db *gorm.DB) (*Bucketlist, error) {
+	// find the bucketlist by ID
+	bucketlist, err := FetchOneBucketlist(id, db)
+	if err != nil {
+		return nil, errors.New("Bucketlist not found.")
+	}
+	// update bucketlist
+	bucketlist.Name = name
+	bucketlist.Description = description
+	db.Save(*bucketlist)
+	return *&bucketlist, nil
 }

@@ -40,3 +40,12 @@ func CreateBucketlist(name, description string, db *gorm.DB) (*Bucketlist, error
 	}
 	return nil, errors.New("An error occured. Create operation unsuccessful.")
 }
+
+func FetchBucketlists(db *gorm.DB) (*[]Bucketlist, error) {
+	var bucketlists []Bucketlist
+	db.Find(&bucketlists)
+	if len(bucketlists) > 0 {
+		return &bucketlists, nil
+	}
+	return nil, errors.New("You have no bucketlists.")
+}

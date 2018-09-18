@@ -12,7 +12,6 @@ type BaseModel struct {
 	ID        string `gorm:"primary_key;unique"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt *time.Time
 	Items     []Item
 }
 
@@ -56,7 +55,7 @@ func FetchOneBucketlist(id string, db *gorm.DB) (*Bucketlist, error) {
 	if bucketlist.ID == id {
 		return &bucketlist, nil
 	}
-	return nil, errors.New("Bucketlist matching given id not found.")
+	return nil, errors.New("Update unsuccessful. Bucketlist matching given id not found.")
 }
 
 func UpdateBucketlist(id, name, description string, db *gorm.DB) (*Bucketlist, error) {
@@ -70,4 +69,13 @@ func UpdateBucketlist(id, name, description string, db *gorm.DB) (*Bucketlist, e
 	bucketlist.Description = description
 	db.Save(*bucketlist)
 	return *&bucketlist, nil
+}
+
+func DeleteBucketlist(id string, db *gorm.DB) error {
+	bucketlist, err := FetchOneBucketlist(id, db)
+	if err != nil {
+		return errors.New("Delete unsuccessful. Bucketlist not found.")
+	}
+	db.Delete(&bucketlist)
+	return nil
 }

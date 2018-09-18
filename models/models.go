@@ -91,3 +91,20 @@ func CreateItem(bucketlist Bucketlist, description string, db *gorm.DB) (*Item, 
 	}
 	return nil, errors.New("Item could not be created.")
 }
+
+func FetchBucketlistItems(bucketlist Bucketlist, db *gorm.DB) ([]Item, error) {
+	items := bucketlist.Items
+	if len(items) > 0 {
+		return items, nil
+	}
+	return nil, errors.New("The bucketlist has no items.")
+}
+
+func FetchOneItem(id string, db *gorm.DB) (*Item, error) {
+	var item Item
+	db.Where("id = ?", id).First(&item)
+	if item.ID == id {
+		return &item, nil
+	}
+	return nil, errors.New("The item matching id does not exist.")
+}

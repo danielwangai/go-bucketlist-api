@@ -30,7 +30,13 @@ func main() {
 		log.Fatal(db_err)
 	}
 	db.AutoMigrate(models.Bucketlist{}, models.Item{})
-
+	// b, _ := models.CreateBucketlist("name 3", "description 2", db)
+	// fmt.Println(b)
+	// fmt.Println(models.UpdateBucketlist("e1683d09-20b8-40a9-a29f-63ccd7a42794", "name", "descr", db))
+	// fmt.Println(models.FetchOneBucketlist("e1683d09-20b8-40a9-a29f-63ccd7a42794", db))
+	d, _ := models.FetchOneBucketlist("ec55dfd7-b670-40ed-be32-fb4a777e8eb9", db)
+	c, _ := models.CreateItem(*d, "descr", db)
+	fmt.Println(c)
 	router := mux.NewRouter()
 	// bucketlist routes
 	router.HandleFunc("/bucketlists", controllers.CreateBucketlist).Methods("POST")

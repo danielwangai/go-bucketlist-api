@@ -79,3 +79,15 @@ func DeleteBucketlist(id string, db *gorm.DB) error {
 	db.Delete(&bucketlist)
 	return nil
 }
+
+func CreateItem(bucketlist Bucketlist, description string, db *gorm.DB) (*Item, error) {
+	var item Item
+	item.ID = uuid.Must(uuid.NewV4()).String()
+	item.Description = description
+	item.BucketlistId = bucketlist.ID
+	db.Create(&item)
+	if len(item.ID) > 0 {
+		return &item, nil
+	}
+	return nil, errors.New("Item could not be created.")
+}

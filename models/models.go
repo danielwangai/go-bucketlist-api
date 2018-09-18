@@ -108,3 +108,22 @@ func FetchOneItem(id string, db *gorm.DB) (*Item, error) {
 	}
 	return nil, errors.New("The item matching id does not exist.")
 }
+
+func UpdateItem(id, description string, db *gorm.DB) (*Item, error) {
+	item, err := FetchOneItem(id, db)
+	if err != nil {
+		return nil, errors.New("Item matching ID not found.")
+	}
+	item.Description = description
+	db.Save(&item)
+	return *&item, nil
+}
+
+func DeleteItem(id string, db *gorm.DB) error {
+	item, err := FetchOneItem(id, db)
+	if err != nil {
+		return errors.New("Item matching ID not found.")
+	}
+	db.Delete(&item)
+	return nil
+}

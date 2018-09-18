@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"go_bucketlist_api/controllers"
+	"go_bucketlist_api/models"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -28,7 +29,7 @@ func main() {
 		fmt.Println("DB Connection ERROR")
 		log.Fatal(db_err)
 	}
-	_ = db
+	db.AutoMigrate(models.Bucketlist{}, models.Item{})
 
 	router := mux.NewRouter()
 	// bucketlist routes

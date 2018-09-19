@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"go_bucketlist_api/models"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func CreateBucketlist(w http.ResponseWriter, r *http.Request) {
@@ -14,7 +16,6 @@ func CreateBucketlist(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusBadRequest, "Invalid request payload.")
 		panic(err)
 	}
-	fmt.Println("DECODE - ", bucketlist.Name)
 	if len(bucketlist.Name) == 0 || len(bucketlist.Description) == 0 {
 		RespondWithError(w, http.StatusBadRequest, "Bucketlist name and description required.")
 		panic("Bucketlist name and description required.")
@@ -37,11 +38,17 @@ func GetAllBucketlists(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetOneBucketlist(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(w, "Not implemented yet.")
+	params := mux.Vars(r)
+	bucketlist, err := models.FetchOneBucketlist(params["id"])
+	if err != nil {
+		RespondWithError(w, http.StatusNotFound, err.Error())
+		panic(err.Error())
+	}
+	RespondWithJson(w, http.StatusOK, bucketlist)
 }
 
 func UpdateBucketlist(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(w, "Not implemented yet.")
+
 }
 
 func DeleteBucketlist(w http.ResponseWriter, r *http.Request) {

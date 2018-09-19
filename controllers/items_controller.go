@@ -49,7 +49,13 @@ func GetBucketlistItems(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetOneItem(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(w, "Not implemented yet.")
+	params := mux.Vars(r)
+	item, itemErr := models.FetchOneItem(params["itemId"])
+	if itemErr != nil {
+		RespondWithError(w, http.StatusNotFound, itemErr.Error())
+		return
+	}
+	RespondWithJson(w, http.StatusCreated, item)
 }
 
 func UpdateItem(w http.ResponseWriter, r *http.Request) {

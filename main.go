@@ -31,7 +31,15 @@ func main() {
 	router.HandleFunc("/bucketlists/{id}/items/{itemId}", controllers.GetOneItem).Methods("GET")
 	router.HandleFunc("/bucketlists/{id}/items/{itemId}", controllers.UpdateItem).Methods("PUT")
 	router.HandleFunc("/bucketlists/{id}/items/{itemId}", controllers.DeleteItem).Methods("DELETE")
-	if err := http.ListenAndServe(":3000", router); err != nil {
+	
+	svr := &http.Server{
+		ReadTimeout: 10 *time.Second,
+		WriteTimeout: 30 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+		Handler: router,
+	}
+	
+	if err := svr.ListenAndServe(":3000", router); err != nil {
 		log.Fatal(err)
 	}
 }

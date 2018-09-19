@@ -106,7 +106,7 @@ func UpdateBucketlist(id, name, description string) (*Bucketlist, error) {
 	// find the bucketlist by ID
 	bucketlist, err := FetchOneBucketlist(id)
 	if err != nil {
-		return nil, errors.New("Bucketlist not found.")
+		return nil, errors.New("Update unsuccessful. Bucketlist not found.")
 	}
 	// update bucketlist
 	bucketlist.Name = name

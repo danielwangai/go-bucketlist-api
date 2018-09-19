@@ -10,7 +10,7 @@ import (
 )
 
 func CreateBucketlist(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	// defer r.Body.Close()
 	var bucketlist models.Bucketlist
 	if err := json.NewDecoder(r.Body).Decode(&bucketlist); err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid request payload.")
@@ -48,7 +48,22 @@ func GetOneBucketlist(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateBucketlist(w http.ResponseWriter, r *http.Request) {
-
+	params := mux.Vars(r)
+	var bucketlist models.Bucketlist
+	if err := json.NewDecoder(r.Body).Decode(&bucketlist); err != nil {
+		RespondWithError(w, http.StatusBadRequest, err.Error())
+		panic(err.Error())
+	}
+	if len(bucketlist.Name) == 0 || len(bucketlist.Description) == 0 {
+		RespondWithError(w, http.StatusBadRequest, "Cannot update with empty fields.")
+		panic("Cannot update with empty fields.")
+	}
+	b, e := models.UpdateBucketlist(params["id"], bucketlist.Name, bucketlist.Description)
+	if e != nil {
+		RespondWithError(w, http.StatusBadRequest, e.Error())
+		panic(e.Error())
+	}
+	RespondWithJson(w, http.StatusOK, b)
 }
 
 func DeleteBucketlist(w http.ResponseWriter, r *http.Request) {

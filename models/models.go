@@ -67,7 +67,6 @@ func Connect() (db *gorm.DB) {
 	if dbErr != nil {
 		fmt.Println("DB Connection ERROR")
 		log.Fatal(dbErr)
-		return nil
 	}
 	return db
 }
@@ -137,7 +136,6 @@ func CreateItem(bucketlist Bucketlist, description string) (*Item, error) {
 }
 
 func FetchBucketlistItems(bucketlist Bucketlist) ([]Item, error) {
-	fmt.Println("Bucket ---==> ", bucketlist)
 	items := bucketlist.Items
 	if len(items) > 0 {
 		return items, nil

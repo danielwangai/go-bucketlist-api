@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"go_bucketlist_api/models"
 	"net/http"
 
@@ -78,5 +77,11 @@ func UpdateItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteItem(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(w, "Not implemented yet.")
+	params := mux.Vars(r)
+	err := models.DeleteItem(params["itemId"])
+	if err != nil {
+		RespondWithError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	RespondWithJson(w, http.StatusCreated, map[string]string{"message": "Item deleted successfully."})
 }

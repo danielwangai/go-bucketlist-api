@@ -3,8 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 func RespondWithJson(w http.ResponseWriter, statusCode int, payload interface{}) {

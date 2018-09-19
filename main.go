@@ -18,16 +18,6 @@ func init() {
 }
 
 func main() {
-	// b, _ := models.CreateBucketlist("name 4", "description 2", db)
-	// fmt.Println(b)
-	// fmt.Println(models.UpdateBucketlist("e1683d09-20b8-40a9-a29f-63ccd7a42794", "name", "descr", db))
-	// fmt.Println(models.FetchOneBucketlist("e1683d09-20b8-40a9-a29f-63ccd7a42794", db))
-	// d, _ := models.FetchOneBucketlist("ec55dfd7-b670-40ed-be32-fb4a777e8eb9", db)
-	// c, _ := models.CreateItem(*d, "descr", db)
-	// fmt.Println(c)
-	// i := models.DeleteItem("67eb0bf4-65cc-464e-a6f3-503c08e656b0", db)
-	// fmt.Println(i)
-
 	// bucketlist routes
 	router := mux.NewRouter()
 	router.HandleFunc("/bucketlists", controllers.CreateBucketlist).Methods("POST")

@@ -5,29 +5,26 @@ import (
 	"fmt"
 	"go_bucketlist_api/models"
 	"net/http"
-
-	"github.com/jinzhu/gorm"
 )
-
-var db *gorm.DB
-
-func init() {
-	db = models.Connect()
-	fmt.Println("DB -> ", db)
-}
 
 func CreateBucketlist(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var bucketlist models.Bucketlist
 	if err := json.NewDecoder(r.Body).Decode(&bucketlist); err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid request payload.")
-		return
+		panic(err)
 	}
-	b, err := models.CreateBucketlist(bucketlist.Name, bucketlist.Description, db)
+	fmt.Println("DECODE - ", bucketlist.Name)
+	if len(bucketlist.Name) == 0 || len(bucketlist.Description) == 0 {
+		RespondWithError(w, http.StatusBadRequest, "Bucketlist name and description required.")
+		panic("Bucketlist name and description required.")
+	}
+	b, err := models.CreateBucketlist(bucketlist.Name, bucketlist.Description)
 	if err != nil {
-		fmt.Println(err)
+		RespondWithError(w, http.StatusInternalServerError, "Something went wrong while creating the bucketlist.")
+		panic(err)
 	}
-	fmt.Println(b)
+	RespondWithJson(w, http.StatusCreated, b)
 }
 
 func GetAllBucketlists(w http.ResponseWriter, r *http.Request) {

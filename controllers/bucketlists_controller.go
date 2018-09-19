@@ -28,7 +28,12 @@ func CreateBucketlist(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllBucketlists(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(w, "Not implemented yet.")
+	bucketlists, err := models.FetchBucketlists()
+	if err != nil {
+		RespondWithError(w, http.StatusNotFound, err.Error())
+		panic(err)
+	}
+	RespondWithJson(w, http.StatusOK, bucketlists)
 }
 
 func GetOneBucketlist(w http.ResponseWriter, r *http.Request) {

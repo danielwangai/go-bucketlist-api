@@ -42,13 +42,13 @@ type BaseModel struct {
 	ID        string `gorm:"primary_key;unique"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Items     []Item
 }
 
 type Bucketlist struct {
 	BaseModel
 	Name        string `gorm:"not null"`
 	Description string `gorm:"not null;size=400"`
+	Items       []Item
 }
 
 type Item struct {
@@ -137,6 +137,7 @@ func CreateItem(bucketlist Bucketlist, description string) (*Item, error) {
 }
 
 func FetchBucketlistItems(bucketlist Bucketlist) ([]Item, error) {
+	fmt.Println("Bucket ---==> ", bucketlist)
 	items := bucketlist.Items
 	if len(items) > 0 {
 		return items, nil

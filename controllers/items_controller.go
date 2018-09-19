@@ -34,7 +34,18 @@ func CreateItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetBucketlistItems(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(w, "Not implemented yet.")
+	params := mux.Vars(r)
+	bucketlist, bucketErr := models.FetchOneBucketlist(params["id"])
+	if bucketErr != nil {
+		RespondWithError(w, http.StatusNotFound, "Bucketlist not found.")
+		return
+	}
+	items, itemErr := models.FetchBucketlistItems(*bucketlist)
+	if itemErr != nil {
+		RespondWithError(w, http.StatusNotFound, itemErr.Error())
+		return
+	}
+	RespondWithJson(w, http.StatusCreated, items)
 }
 
 func GetOneItem(w http.ResponseWriter, r *http.Request) {

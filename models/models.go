@@ -2,6 +2,9 @@ package models
 
 import (
 	"errors"
+	"fmt"
+	"log"
+	"os"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -26,6 +29,20 @@ type Item struct {
 	Description  string `gorm:"not null;size:200"`
 	Bucketlist   Bucketlist
 	BucketlistId string
+}
+
+// DB connection
+func Connect() (db *gorm.DB) {
+	DB_HOST := os.Getenv("DB_HOST")
+	DB_NAME := os.Getenv("DB_NAME")
+	SSL_MODE := os.Getenv("SSL_MODE")
+	db, db_err := gorm.Open("postgres", "host="+DB_HOST+" port=5432 dbname="+DB_NAME+" sslmode="+SSL_MODE)
+	if db_err != nil {
+		fmt.Println("DB Connection ERROR")
+		log.Fatal(db_err)
+		return nil
+	}
+	return db
 }
 
 func CreateBucketlist(name, description string, db *gorm.DB) (*Bucketlist, error) {

@@ -59,7 +59,22 @@ func GetOneItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateItem(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(w, "Not implemented yet.")
+	var item models.Item
+	params := mux.Vars(r)
+	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+		RespondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if len(item.Description) == 0 {
+		RespondWithError(w, http.StatusBadRequest, "Item description required to update")
+		return
+	}
+	i, itemErr := models.UpdateItem(params["itemId"], item.Description)
+	if itemErr != nil {
+		RespondWithError(w, http.StatusNotFound, itemErr.Error())
+		return
+	}
+	RespondWithJson(w, http.StatusOK, i)
 }
 
 func DeleteItem(w http.ResponseWriter, r *http.Request) {

@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
 	uuid "github.com/satori/go.uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -56,6 +58,41 @@ type Item struct {
 	Description  string `gorm:"not null;size:200"`
 	Bucketlist   Bucketlist
 	BucketlistId string
+}
+
+type User struct {
+	BaseModel
+	Email    string `gorm:"not null"`
+	Password string `gorm:"not null"`
+}
+
+// user callback
+func ValidateEmail(email string) error {
+	re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	if re.MatchString(email) == false {
+		return errors.New("Invalid email format.")
+	}
+	return nil
+}
+
+func ValidatePassword(password string) (string, error) {
+	// check password length
+	if len(password) == 0 || len(password) < 6 {
+		return "", errors.New("Password length must be greater than 5")
+	}
+	// hash password
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(hash), err
+}
+
+func (user *User) BeforeCreate() error {
+	mailErr := ValidateEmail(user.Email)
+	pass, passErr := ValidatePassword(user.Password)
+	if mailErr != nil || passErr != nil {
+		return errors.New("An error occured when creating the user.")
+	}
+	user.Password = pass
+	return nil
 }
 
 // DB connection

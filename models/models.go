@@ -12,7 +12,6 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
 	uuid "github.com/satori/go.uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -36,7 +35,7 @@ func init() {
 		log.Fatal(dotenv_err)
 	}
 	db = Connect()
-	db.AutoMigrate(Bucketlist{}, Item{})
+	db.AutoMigrate(Bucketlist{}, Item{}, User{})
 }
 
 // models
@@ -67,6 +66,16 @@ type User struct {
 }
 
 // user callback
+func (user *User) BeforeCreate() error {
+	mailErr := ValidateEmail(user.Email)
+	passErr := ValidatePassword(user.Password)
+	if mailErr != nil || passErr != nil {
+		return errors.New("An error occured when creating the user.")
+	}
+	return nil
+}
+
+// helpers
 func ValidateEmail(email string) error {
 	re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	if re.MatchString(email) == false {
@@ -75,23 +84,20 @@ func ValidateEmail(email string) error {
 	return nil
 }
 
-func ValidatePassword(password string) (string, error) {
+func ValidatePassword(password string) error {
 	// check password length
 	if len(password) == 0 || len(password) < 6 {
-		return "", errors.New("Password length must be greater than 5")
+		return errors.New("Password length must be greater than 5")
 	}
-	// hash password
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(hash), err
+	return nil
 }
 
-func (user *User) BeforeCreate() error {
-	mailErr := ValidateEmail(user.Email)
-	pass, passErr := ValidatePassword(user.Password)
-	if mailErr != nil || passErr != nil {
-		return errors.New("An error occured when creating the user.")
+func ValidateUniqueEmail(email string) error {
+	var user User
+	db.Where("email = ?", email).First(&user)
+	if user.Email == email {
+		return errors.New("A user with this email exists.")
 	}
-	user.Password = pass
 	return nil
 }
 
@@ -106,6 +112,23 @@ func Connect() (db *gorm.DB) {
 		log.Fatal(dbErr)
 	}
 	return db
+}
+
+func (user *User) CreateUser() (*User, error) {
+	if mailErr := ValidateEmail(user.Email); mailErr != nil {
+		return nil, mailErr
+	}
+	if passErr := ValidatePassword(user.Password); passErr != nil {
+		return nil, passErr
+	}
+	// validate unique email
+	if uniqueMail := ValidateUniqueEmail(user.Email); uniqueMail != nil {
+		return nil, uniqueMail
+	}
+	// create user
+	user.ID = uuid.Must(uuid.NewV4()).String()
+	db.Create(&user)
+	return user, nil
 }
 
 func CreateBucketlist(name, description string) (*Bucketlist, error) {

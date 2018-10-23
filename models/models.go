@@ -5,7 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/dgrijalva/jwt-go"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -34,7 +39,7 @@ func init() {
 		log.Fatal(dotenv_err)
 	}
 	db = Connect()
-	db.AutoMigrate(Bucketlist{}, Item{})
+	db.AutoMigrate(Bucketlist{}, Item{}, User{})
 }
 
 // models
@@ -58,6 +63,55 @@ type Item struct {
 	BucketlistId string
 }
 
+type User struct {
+	BaseModel
+	Email    string `gorm:"not null"`
+	Password string `gorm:"not null"`
+}
+
+type Token struct {
+	UserId    string
+	Email     string
+	AuthToken string
+	jwt.StandardClaims
+}
+
+// user callback
+func (user *User) BeforeCreate() error {
+	mailErr := ValidateEmail(user.Email)
+	passErr := ValidatePassword(user.Password)
+	if mailErr != nil || passErr != nil {
+		return errors.New("An error occured when creating the user.")
+	}
+	return nil
+}
+
+// helpers
+func ValidateEmail(email string) error {
+	re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	if re.MatchString(email) == false {
+		return errors.New("Invalid email format.")
+	}
+	return nil
+}
+
+func ValidatePassword(password string) error {
+	// check password length
+	if len(password) == 0 || len(password) < 6 {
+		return errors.New("Password length must be greater than 5")
+	}
+	return nil
+}
+
+func ValidateUniqueEmail(email string) error {
+	var user User
+	db.Where("email = ?", email).First(&user)
+	if user.Email == email {
+		return errors.New("A user with this email exists.")
+	}
+	return nil
+}
+
 // DB connection
 func Connect() (db *gorm.DB) {
 	DbHost := os.Getenv("DB_HOST")
@@ -69,6 +123,29 @@ func Connect() (db *gorm.DB) {
 		log.Fatal(dbErr)
 	}
 	return db
+}
+
+func (user *User) CreateUser() (*User, error) {
+	if mailErr := ValidateEmail(user.Email); mailErr != nil {
+		return nil, mailErr
+	}
+	if passErr := ValidatePassword(user.Password); passErr != nil {
+		return nil, passErr
+	}
+	// validate unique email
+	if uniqueMail := ValidateUniqueEmail(user.Email); uniqueMail != nil {
+		return nil, uniqueMail
+	}
+	// encrypt password
+	hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if hashErr != nil {
+		return nil, hashErr
+	}
+	user.Password = string(hashedPassword)
+	// create user
+	user.ID = uuid.Must(uuid.NewV4()).String()
+	db.Create(&user)
+	return user, nil
 }
 
 func CreateBucketlist(name, description string) (*Bucketlist, error) {
@@ -169,4 +246,37 @@ func DeleteItem(id string) error {
 	}
 	db.Delete(&item)
 	return nil
+}
+
+// user
+
+func GetUser(id string) (*User, error) {
+	var user User
+	db.Where("id = ?", id).First(&user)
+	if user.ID == id {
+		return &user, nil
+	}
+	return nil, errors.New("User not found.")
+}
+
+func Login(email, password string) (*Token, error) {
+	// validate credentials
+	var user User
+	db.Where("email = ?", email).First(&user)
+	if user.Email != email {
+		return nil, errors.New("Email not found.")
+	}
+	hashErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if hashErr != nil && hashErr == bcrypt.ErrMismatchedHashAndPassword {
+		return nil, hashErr
+	}
+	// create JWT token
+	tk := &Token{UserId: user.ID, Email: user.Email}
+	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tk)
+	tokenStr, tkErr := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+	if tkErr != nil {
+		return nil, tkErr
+	}
+	tk.AuthToken = tokenStr
+	return tk, nil
 }
